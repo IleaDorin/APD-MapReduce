@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <fstream>
 #include <algorithm>
+#include <tbb/concurrent_hash_map.h>
 
 using namespace std;
 
@@ -24,6 +25,8 @@ int main(int argc, char *argv[]) {
     const int NUM_REDUCERS = atoi(argv[2]);
     string test_file = argv[3];
     const int TOTAL_THREADS = NUM_MAPPERS + NUM_REDUCERS;
+    //the conc map shared by all mappers
+    tbb::concurrent_hash_map<std::string, std::set<int>> partialResults;
 
     //map to store the filename and id
     unordered_map<string, int> fileMap;
@@ -34,8 +37,6 @@ int main(int argc, char *argv[]) {
     vector<pair<string, size_t>> fileSizes = getFileSizes(fileNames);
     vector<vector<pair<string, int>>> mapperFiles;
     distributeFilesDynamic(fileSizes, NUM_MAPPERS, mapperFiles, fileMap);
-    // Shared Mapper results (partial results)
-    std::unordered_map<std::string, std::set<int>> partialResults;
 
     pthread_t threads[TOTAL_THREADS];
     ThreadArgs threadArgs[TOTAL_THREADS];
@@ -68,6 +69,9 @@ int main(int argc, char *argv[]) {
             exit(-1);
         }
     }
+
+    //demo 
+    writeConcurrentMapToFile(partialResults, "output.txt");
 
     return 0;
 }
@@ -141,7 +145,7 @@ vector<string> parseInputFile(const string& filename, unordered_map<string, int>
         std::string fileName;
         inputFile >> fileName;
         fileNames.push_back(fileName);
-        fileMap[fileName] = i;
+        fileMap[fileName] = i + 1;
     }
 
     inputFile.close();

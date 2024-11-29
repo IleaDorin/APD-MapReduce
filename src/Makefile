@@ -1,18 +1,24 @@
 CXX = g++
 CXXFLAGS = -Wall -Werror -std=c++17 -pthread
+LDFLAGS = -ltbb
 
-SRCS = main.cpp map.cpp reduce.cpp
-OBJS = $(SRCS:.cpp=.o)
+all: tema
 
-TARGET = tema
+tema: main.o map.o reduce.o functions.o
+	$(CXX) $(CXXFLAGS) -o tema main.o map.o reduce.o functions.o $(LDFLAGS)
 
-all: $(TARGET)
+main.o: main.cpp
+	$(CXX) $(CXXFLAGS) -c main.cpp
 
-$(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS)
+map.o: map.cpp
+	$(CXX) $(CXXFLAGS) -c map.cpp
 
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+reduce.o: reduce.cpp
+	$(CXX) $(CXXFLAGS) -c reduce.cpp
+
+functions.o: functions.cpp
+	$(CXX) $(CXXFLAGS) -c functions.cpp
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f *.o tema
+	rm output.txt

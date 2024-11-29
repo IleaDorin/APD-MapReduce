@@ -12,4 +12,9 @@ void reducerFunction(ThreadArgs* args);
 // Writes output to files
 void writeOutputFiles(const std::unordered_map<std::string, std::vector<int>>& results);
 
+//demo
+void writeConcurrentMapToFile(
+    const tbb::concurrent_hash_map<std::string, std::set<int>>& concurrentMap,
+    const std::string& outputFilename);
+
 #endif // FUNCTIONS_H
