@@ -4,7 +4,14 @@
 #include <vector>
 #include <algorithm>
 
+using namespace std;
+
 void reducerFunction(ThreadArgs* args) {
-    std::cout << "Reducer function called for thread " << args->id << "\n";
+    // waite for all the mappers and reducers to be here
+    pthread_barrier_wait(args->barrier);
+
+    //demo
+    cout << "reducer is running\n";
+
     // Implementation...
 }

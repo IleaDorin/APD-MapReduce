@@ -10,6 +10,7 @@
 #include <fstream>
 #include <algorithm>
 #include <tbb/concurrent_hash_map.h>
+#include <semaphore>
 
 using namespace std;
 
@@ -21,10 +22,13 @@ void distributeFilesDynamic(const vector<pair<string, size_t>>& fileSizes,
 std::vector<std::string> parseInputFile(const std::string& filename, unordered_map<string, int>& fileMap);
 
 int main(int argc, char *argv[]) {
+    
     const int NUM_MAPPERS = atoi(argv[1]);
     const int NUM_REDUCERS = atoi(argv[2]);
     string test_file = argv[3];
     const int TOTAL_THREADS = NUM_MAPPERS + NUM_REDUCERS;
+    pthread_barrier_t barrier;
+    pthread_barrier_init(&barrier, NULL, TOTAL_THREADS);
     //the conc map shared by all mappers
     tbb::concurrent_hash_map<std::string, std::set<int>> partialResults;
 
@@ -38,6 +42,18 @@ int main(int argc, char *argv[]) {
     vector<vector<pair<string, int>>> mapperFiles;
     distributeFilesDynamic(fileSizes, NUM_MAPPERS, mapperFiles, fileMap);
 
+    //distributr the letters to the reducers
+    map<int, vector<char>> reducerLetters = mapReducerToLetters(TOTAL_THREADS, NUM_MAPPERS);
+
+    //demo print the letters
+    for (const auto& [reducerID, letters] : reducerLetters) {
+        cout << "Reducer " << reducerID << " gets letters: ";
+        for (char letter : letters) {
+            cout << letter << " ";
+        }
+        cout << "\n";
+    }
+
     pthread_t threads[TOTAL_THREADS];
     ThreadArgs threadArgs[TOTAL_THREADS];
     int r;
@@ -47,11 +63,12 @@ int main(int argc, char *argv[]) {
         
 
         if (i < NUM_MAPPERS) {
-            threadArgs[i] = {i, "mapper", mapperFiles[i], &partialResults, nullptr}; // assign arguments
+            threadArgs[i] = {i, "mapper", mapperFiles[i], &partialResults, nullptr, &barrier}; // assign arguments
             // Adaugă fișierele specifice Mapperului
         } else {
             threadArgs[i].type = "reducer";
             // Adaugă datele specifice Reducerului
+            threadArgs[i].barrier = &barrier;
         }
 
         r = pthread_create(&threads[i], NULL, threadFunction, &threadArgs[i]);
@@ -84,8 +101,8 @@ void* threadFunction(void* arg) {
     if (args->type == "mapper") {
         mapperFunction(args); // Call Mapper logic
     } else if (args->type == "reducer") {
-        
-        // reducerFunction(args); // Call Reducer logic
+        //cout << "reducer is running\n";
+        reducerFunction(args); // Call Reducer logic
     } else {
         cerr << "Unknown thread type for Thread " << args->id << "\n";
     }

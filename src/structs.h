@@ -14,6 +14,8 @@ struct ThreadArgs {
     std::vector<std::pair<std::string, int>> files; // List of files (for mappers)
     tbb::concurrent_hash_map<std::string, std::set<int>>* partialResults;
     std::unordered_map<std::string, std::vector<int>>* finalResults; // Reducer results
+    //demo
+    pthread_barrier_t* barrier;
 };
 
 #endif // STRUCTS_H
