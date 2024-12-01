@@ -21,4 +21,3 @@ functions.o: functions.cpp
 
 clean:
 	rm -f *.o tema
-	rm output.txt

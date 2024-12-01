@@ -13,8 +13,7 @@ struct ThreadArgs {
     std::string type;            // "mapper" or "reducer"
     std::vector<std::pair<std::string, int>> files; // List of files (for mappers)
     tbb::concurrent_hash_map<std::string, std::set<int>>* partialResults;
-    std::unordered_map<std::string, std::vector<int>>* finalResults; // Reducer results
-    //demo
+    std::vector<char>* letters;  // Letter ranges (for reducers)
     pthread_barrier_t* barrier;
 };
 

@@ -45,15 +45,6 @@ int main(int argc, char *argv[]) {
     //distributr the letters to the reducers
     map<int, vector<char>> reducerLetters = mapReducerToLetters(TOTAL_THREADS, NUM_MAPPERS);
 
-    //demo print the letters
-    for (const auto& [reducerID, letters] : reducerLetters) {
-        cout << "Reducer " << reducerID << " gets letters: ";
-        for (char letter : letters) {
-            cout << letter << " ";
-        }
-        cout << "\n";
-    }
-
     pthread_t threads[TOTAL_THREADS];
     ThreadArgs threadArgs[TOTAL_THREADS];
     int r;
@@ -61,13 +52,14 @@ int main(int argc, char *argv[]) {
     // Creează toate thread-urile
     for (int i = 0; i < TOTAL_THREADS; ++i) {
         
-
         if (i < NUM_MAPPERS) {
-            threadArgs[i] = {i, "mapper", mapperFiles[i], &partialResults, nullptr, &barrier}; // assign arguments
+            threadArgs[i] = {i, "mapper", mapperFiles[i], &partialResults, {}, &barrier}; // assign arguments
             // Adaugă fișierele specifice Mapperului
         } else {
+            threadArgs[i].id = i;
             threadArgs[i].type = "reducer";
-            // Adaugă datele specifice Reducerului
+            threadArgs[i].partialResults = &partialResults;
+            threadArgs[i].letters = &reducerLetters[i];
             threadArgs[i].barrier = &barrier;
         }
 
@@ -88,7 +80,7 @@ int main(int argc, char *argv[]) {
     }
 
     //demo 
-    writeConcurrentMapToFile(partialResults, "output.txt");
+    //writeConcurrentMapToFile(partialResults, "output.txt");
 
     return 0;
 }
