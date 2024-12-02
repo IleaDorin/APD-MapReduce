@@ -1,23 +1,30 @@
+# Compiler and flags
 CXX = g++
 CXXFLAGS = -Wall -Werror -std=c++17 -pthread
 LDFLAGS = -ltbb
 
-all: tema
+# Target executable
+TARGET = tema1
 
-tema: main.o map.o reduce.o functions.o
-	$(CXX) $(CXXFLAGS) -o tema main.o map.o reduce.o functions.o $(LDFLAGS)
+# Source files
+SRCS = main.cpp map.cpp reduce.cpp functions.cpp
+OBJS = $(SRCS:.cpp=.o)
 
-main.o: main.cpp
-	$(CXX) $(CXXFLAGS) -c main.cpp
+# Default target
+all: $(TARGET)
 
-map.o: map.cpp
-	$(CXX) $(CXXFLAGS) -c map.cpp
+# Build the main executable
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS)
 
-reduce.o: reduce.cpp
-	$(CXX) $(CXXFLAGS) -c reduce.cpp
+# Rule for compiling source files into object files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-functions.o: functions.cpp
-	$(CXX) $(CXXFLAGS) -c functions.cpp
-
+# Clean build artifacts
 clean:
-	rm -f *.o tema
+	rm -f $(OBJS) $(TARGET)
+	rm -r output
+
+# Build alias for checker script
+build: all

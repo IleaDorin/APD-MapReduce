@@ -33,9 +33,6 @@ void mapperFunction(ThreadArgs* args) {
             }
         }
     }
-
-    //demo
-    cout << "mapper is finished\n";
     // Wait for all threads to finish
     pthread_barrier_wait(args->barrier);
 }

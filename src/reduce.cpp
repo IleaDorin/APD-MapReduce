@@ -9,6 +9,17 @@
 
 using namespace std;
 
+// Custom comparator for sorting words by file count (descending) and alphabetically
+struct WordComparator {
+    bool operator()(const std::pair<std::string, int>& a, const std::pair<std::string, int>& b) const {
+        if (a.second != b.second) {
+            return a.second > b.second; // Sort by file count (descending)
+        }
+        return a.first < b.first; // Sort alphabetically in case of a tie
+    }
+};
+
+
 std::set<int> getPartialResult(
     const tbb::concurrent_hash_map<std::string, std::set<int>>& partialResults, 
     const std::string& word);
@@ -19,7 +30,8 @@ void reducerFunction(ThreadArgs* args) {
 
     for (char letter : *(args->letters)) {
         // Create a filename for each letter
-        std::string filename = "output/" + std::string(1, letter) + ".txt";
+        //std::string filename = "output/" + std::string(1, letter) + ".txt";  //for manual testing
+        std::string filename = std::string(1, letter) + ".txt"; // for automated testing
         std::ofstream outputFile(filename);
         if (!outputFile.is_open()) {
             std::cerr << "Failed to open output file: " << filename << "\n";
@@ -27,26 +39,27 @@ void reducerFunction(ThreadArgs* args) {
         }
 
         // Collect words starting with the current letter
-        std::vector<std::pair<std::string, int>> wordList;
+        std::set<std::pair<std::string, int>, WordComparator> wordList;
         
         for (const auto& [word, fileIDs] : *(args->partialResults)) {
             if (std::tolower(word[0]) == letter) {
-                wordList.emplace_back(word, fileIDs.size()); // Store word and its file count
+                wordList.emplace(word, fileIDs.size()); // Store word and its file count
             }
         }
 
         // Sort the words: first by file count (descending), then alphabetically
-        std::sort(wordList.begin(), wordList.end(), [](const auto& a, const auto& b) {
-            if (a.second != b.second) {
-                return a.second > b.second; // Sort by file count (descending)
-            }
-            return a.first < b.first; // Sort alphabetically
-        });
+        // std::sort(wordList.begin(), wordList.end(), [](const auto& a, const auto& b) {
+        //     if (a.second != b.second) {
+        //         return a.second > b.second; // Sort by file count (descending)
+        //     }
+        //     return a.first < b.first; // Sort alphabetically
+        // });
+
 
         // Write sorted words to the file
         for (const auto& [word, fileIDs] : wordList) {
             set<int> files = getPartialResult(*(args->partialResults), word);
-            outputFile << word << ": [";
+            outputFile << word << ":[";
             for (auto it = files.begin(); it != files.end(); ++it) {
                 outputFile << *it;
                 if (std::next(it) != files.end()) { // Check if this is not the last element

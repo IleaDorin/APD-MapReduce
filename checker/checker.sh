@@ -238,7 +238,9 @@ do
                 fi
             fi
 
-            rm -rf test_par
+            # DEMO!!!!!!!!!!!!!!
+            
+            #rm -rf test_par
         fi
 
         echo "OK"
