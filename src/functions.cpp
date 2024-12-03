@@ -6,6 +6,7 @@
 #include <tbb/concurrent_hash_map.h>
 #include <map>
 #include <cctype>
+#include <algorithm>
 
 using namespace std;
 

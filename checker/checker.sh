@@ -237,10 +237,8 @@ do
                     correct=$((correct+1))
                 fi
             fi
-
-            # DEMO!!!!!!!!!!!!!!
             
-            #rm -rf test_par
+            rm -rf test_par
         fi
 
         echo "OK"
