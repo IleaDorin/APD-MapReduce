@@ -7,13 +7,15 @@
 #include <unordered_map>
 #include <tbb/concurrent_hash_map.h>
 
-// Arguments passed to each thread
+// arguments passed to each thread
 struct ThreadArgs {
-    int id;                      // Thread ID
+    int id;                      // thread ID
     std::string type;            // "mapper" or "reducer"
-    std::vector<std::pair<std::string, int>> files; // List of files (for mappers)
+    std::vector<std::pair<std::string, int>> files; // list of files (for mappers)
+    
+    // mapperst create it and reducers read from it
     tbb::concurrent_hash_map<std::string, std::set<int>>* partialResults;
-    std::vector<char>* letters;  // Letter ranges (for reducers)
+    std::vector<char>* letters;  // letter ranges (for reducers)
     pthread_barrier_t* barrier;
 };
 

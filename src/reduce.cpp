@@ -9,80 +9,70 @@
 
 using namespace std;
 
-// Custom comparator for sorting words by file count (descending) and alphabetically
+// custom comparator for sorting words 1. count of files 2. alphabetically
 struct WordComparator {
-    bool operator()(const std::pair<std::string, int>& a, const std::pair<std::string, int>& b) const {
+    bool operator()(const pair<string, int>& a, const pair<string, int>& b) const {
         if (a.second != b.second) {
-            return a.second > b.second; // Sort by file count (descending)
+            return a.second > b.second;
         }
-        return a.first < b.first; // Sort alphabetically in case of a tie
+        return a.first < b.first;
     }
 };
 
 
-std::set<int> getPartialResult(
-    const tbb::concurrent_hash_map<std::string, std::set<int>>& partialResults, 
-    const std::string& word);
+set<int> getPartialResult(
+    const tbb::concurrent_hash_map<string, set<int>>& partialResults, 
+    const string& word);
 
 void reducerFunction(ThreadArgs* args) {
-    // Wait for all the mappers and reducers to reach the barrier
+    // wait for all mappers threads to finish
     pthread_barrier_wait(args->barrier);
 
     for (char letter : *(args->letters)) {
-        // Create a filename for each letter
-        //std::string filename = "output/" + std::string(1, letter) + ".txt";  //for manual testing
-        std::string filename = std::string(1, letter) + ".txt"; // for automated testing
-        std::ofstream outputFile(filename);
+        // create a filename for each letter
+        string filename = string(1, letter) + ".txt";
+        ofstream outputFile(filename);
         if (!outputFile.is_open()) {
-            std::cerr << "Failed to open output file: " << filename << "\n";
+            cerr << "Failed to open output file: " << filename << "\n";
             return;
         }
 
-        // Collect words starting with the current letter
-        std::set<std::pair<std::string, int>, WordComparator> wordList;
+        // collect words starting with the current letter
+        set<pair<string, int>, WordComparator> wordList;
         
         for (const auto& [word, fileIDs] : *(args->partialResults)) {
-            if (std::tolower(word[0]) == letter) {
-                wordList.emplace(word, fileIDs.size()); // Store word and its file count
+            if (tolower(word[0]) == letter) {
+                // the set will automatically add them in sorted order
+                wordList.emplace(word, fileIDs.size()); // store word and its file count
             }
         }
 
-        // Sort the words: first by file count (descending), then alphabetically
-        // std::sort(wordList.begin(), wordList.end(), [](const auto& a, const auto& b) {
-        //     if (a.second != b.second) {
-        //         return a.second > b.second; // Sort by file count (descending)
-        //     }
-        //     return a.first < b.first; // Sort alphabetically
-        // });
-
-
-        // Write sorted words to the file
+        // write sorted words to the file
         for (const auto& [word, fileIDs] : wordList) {
             set<int> files = getPartialResult(*(args->partialResults), word);
             outputFile << word << ":[";
             for (auto it = files.begin(); it != files.end(); ++it) {
                 outputFile << *it;
-                if (std::next(it) != files.end()) { // Check if this is not the last element
+                if (next(it) != files.end()) { // check if this is not the last element
                     outputFile << " ";
                 }
             }
-            outputFile << "]\n"; // Close the list and start a new line
+            outputFile << "]\n";
         }
 
-        outputFile.close(); // Close the file after writing
+        outputFile.close();
     }
 }
 
-std::set<int> getPartialResult(
-    const tbb::concurrent_hash_map<std::string, std::set<int>>& partialResults, 
-    const std::string& word) {
-    tbb::concurrent_hash_map<std::string, std::set<int>>::const_accessor accessor;
+set<int> getPartialResult(
+    const tbb::concurrent_hash_map<string, set<int>>& partialResults, 
+    const string& word) {
+    tbb::concurrent_hash_map<string, set<int>>::const_accessor accessor;
 
-    // Attempt to find the word in the concurrent hash map
     if (partialResults.find(accessor, word)) {
-        return accessor->second; // Return a copy of the set
+        return accessor->second; // return a copy of the set
     } else {
-        std::cerr << "Word not found: " << word << "\n";
-        return {}; // Return an empty set if the word is not found
+        cerr << "Word not found: " << word << "\n";
+        return {};
     }
 }

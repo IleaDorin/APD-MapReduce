@@ -10,44 +10,44 @@
 
 using namespace std;
 
-std::string normalizeWord(const std::string& inputWord);
+string normalizeWord(const string& inputWord);
 
 void mapperFunction(ThreadArgs* args) {
      for (const auto& [file, fileID] : args->files) {
-        std::ifstream inputFile(file);
+        ifstream inputFile(file);
         if (!inputFile.is_open()) {
-            std::cerr << "Failed to open file: " << file << "\n";
+            cerr << "Failed to open file: " << file << "\n";
             continue;
         }
 
-        std::string word;
+        string word;
         while (inputFile >> word) {
-            // Normalize the word
-            std::string normalizedWord = normalizeWord(word);
+            // normalize the word
+            string normalizedWord = normalizeWord(word);
 
-            // Skip empty words after normalization
+            // skip empty words after normalization
             if (!normalizedWord.empty()) {
-                // Insert or update the word in partialResults
-                tbb::concurrent_hash_map<std::string, std::set<int>>::accessor acc;
-                args->partialResults->insert(acc, normalizedWord); // Thread-safe insertion
-                acc->second.insert(fileID);                     // Add the file ID to the vector
+                // insert or update the word in partialResults
+                tbb::concurrent_hash_map<string, set<int>>::accessor acc;
+                args->partialResults->insert(acc, normalizedWord);
+                acc->second.insert(fileID);
             }
         }
     }
-    // Wait for all threads to finish
+    // wait for all threads to finish
     pthread_barrier_wait(args->barrier);
 }
 
-std::string normalizeWord(const std::string& inputWord) {
-    std::string normalizedWord;
+string normalizeWord(const string& inputWord) {
+    string normalizedWord;
 
-    // Copy only alphabetic characters to the normalized word
-    std::copy_if(inputWord.begin(), inputWord.end(), std::back_inserter(normalizedWord),
-                 [](char c) { return std::isalpha(c); });
+    // copy only alphabetic characters to the normalized word
+    copy_if(inputWord.begin(), inputWord.end(), back_inserter(normalizedWord),
+                 [](char c) { return isalpha(c); });
 
-    // Convert to lowercase
-    std::transform(normalizedWord.begin(), normalizedWord.end(), normalizedWord.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
+    // convert to lowercase
+    transform(normalizedWord.begin(), normalizedWord.end(), normalizedWord.begin(),
+                   [](unsigned char c) { return tolower(c); });
 
     return normalizedWord;
 }
