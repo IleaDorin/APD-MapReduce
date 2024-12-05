@@ -3,7 +3,6 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <tbb/concurrent_hash_map.h>
 #include <map>
 #include <cctype>
 #include <algorithm>

@@ -14,7 +14,7 @@ computation across multiple parallel workers. It breaks down into two key phases
 
 ---
 
-## Implementation
+## My implementation of this model
 
 The program uses this model to create a reverse index for a large pool of words from a large 
 pool of files. The executable takes the following parameters:
@@ -23,8 +23,8 @@ pool of files. The executable takes the following parameters:
 3. A text document containing all the file names.
 
 All the threads are created simultaneously. Mapper threads parse the files and insert the words 
-into a `concurrent_hash_map` along with the IDs of the files containing each word. The 
-`concurrent_hash_map` ensures safe insertion and prevents race conditions. Reducer threads create 
+into a `concurrent_map` along with the IDs of the files containing each word. The 
+`concurrent_map` ensures safe insertion and prevents race conditions. Reducer threads create 
 separate files for each letter and sort the words based on:
 1. The number of files containing the word (descending order).
 2. Alphabetical order as a tie-breaker.
@@ -37,11 +37,27 @@ The tasks for both types of threads are distributed using a greedy approach:
     in line to the thread with the smallest load.
 
 - **Reducers**:
-  - A precomputed statistic on the percentage of words starting with each letter (e.g., `s → 15.8%`, 
-    `a → 11.7%`) is used. Letters are distributed to reducers similarly to the mappers, based on 
-    load balancing.
+  - A statistic ("https://en.wikipedia.org/wiki/Letter_frequency") on the percentage of words starting with 
+  each letter (e.g., `s → 15.8%`, `a → 11.7%`) is used.
+  Letters are distributed to reducers similarly to the mappers, based on load balancing.
+
+### **Synchronization**
+
+- All threads use a barrier passed as part of their arguments.
+- **Mappers:** Wait at the barrier after completing their tasks.  
+- **Reducers:** Wait at the barrier before starting their tasks.  
+- The barrier is initialized with the total number of threads, ensuring that reducers cannot start working until all mappers have reached the barrier.
+
 
 ---
+
+## Concurrent_map implemetation
+  - The concurrent_map structure is just a list of buckets, each consisting in a unordered_map and a mutex
+  (similar to a normal map but for each bucket access, it locks and unlocks it)
+  - Each time a maper tries to insert an element into the partialRsult, the word is allocated to a bucket,
+  then the bucket is locked, the element gets inserted and the bucket reopens. I tried running the code with
+  a variety of buckets and for scalability I initialized the concurrent_map with no_of_threads * 16 based on
+  a trial and error approach.
 
 ## File Summary
 

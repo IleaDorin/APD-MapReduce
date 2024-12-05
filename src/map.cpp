@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <cctype>
 #include <algorithm>
+#include "concurrent_map.h"
 
 using namespace std;
 
@@ -28,14 +29,14 @@ void mapperFunction(ThreadArgs* args) {
             // skip empty words after normalization
             if (!normalizedWord.empty()) {
                 // insert or update the word in partialResults
-                tbb::concurrent_hash_map<string, set<int>>::accessor acc;
-                args->partialResults->insert(acc, normalizedWord);
-                acc->second.insert(fileID);
+                args->partialResults->insertOrUpdate(normalizedWord, fileID);
             }
         }
     }
     // wait for all threads to finish
     pthread_barrier_wait(args->barrier);
+
+    
 }
 
 string normalizeWord(const string& inputWord) {

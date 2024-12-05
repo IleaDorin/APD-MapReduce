@@ -4,12 +4,12 @@
 #include <vector>
 #include <algorithm>
 #include <fstream>
-#include <tbb/concurrent_hash_map.h>
 #include <set>
+#include "concurrent_map.h"
 
 using namespace std;
 
-// custom comparator for sorting words 1. count of files 2. alphabetically
+// custom comparator for sorting words
 struct WordComparator {
     bool operator()(const pair<string, int>& a, const pair<string, int>& b) const {
         if (a.second != b.second) {
@@ -19,13 +19,10 @@ struct WordComparator {
     }
 };
 
-
-set<int> getPartialResult(
-    const tbb::concurrent_hash_map<string, set<int>>& partialResults, 
-    const string& word);
+set<int> getPartialResult(ConcurrentMap& partialResults, const string& word);
 
 void reducerFunction(ThreadArgs* args) {
-    // wait for all mappers threads to finish
+    // wait for all mapper threads to finish
     pthread_barrier_wait(args->barrier);
 
     for (char letter : *(args->letters)) {
@@ -37,13 +34,14 @@ void reducerFunction(ThreadArgs* args) {
             return;
         }
 
-        // collect words starting with the current letter
+        // collect words starting with the curr letter
         set<pair<string, int>, WordComparator> wordList;
-        
-        for (const auto& [word, fileIDs] : *(args->partialResults)) {
+
+        auto keys = args->partialResults->getKeys();
+        for (const string& word : keys) {
             if (tolower(word[0]) == letter) {
-                // the set will automatically add them in sorted order
-                wordList.emplace(word, fileIDs.size()); // store word and its file count
+                auto files = getPartialResult(*(args->partialResults), word);
+                wordList.emplace(word, files.size()); // store word and file count
             }
         }
 
@@ -53,7 +51,7 @@ void reducerFunction(ThreadArgs* args) {
             outputFile << word << ":[";
             for (auto it = files.begin(); it != files.end(); ++it) {
                 outputFile << *it;
-                if (next(it) != files.end()) { // check if this is not the last element
+                if (next(it) != files.end()) {
                     outputFile << " ";
                 }
             }
@@ -64,15 +62,6 @@ void reducerFunction(ThreadArgs* args) {
     }
 }
 
-set<int> getPartialResult(
-    const tbb::concurrent_hash_map<string, set<int>>& partialResults, 
-    const string& word) {
-    tbb::concurrent_hash_map<string, set<int>>::const_accessor accessor;
-
-    if (partialResults.find(accessor, word)) {
-        return accessor->second; // return a copy of the set
-    } else {
-        cerr << "Word not found: " << word << "\n";
-        return {};
-    }
+set<int> getPartialResult(ConcurrentMap& partialResults, const string& word) {
+    return partialResults.find(word);
 }

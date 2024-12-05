@@ -9,7 +9,7 @@
 #include <filesystem>
 #include <fstream>
 #include <algorithm>
-#include <tbb/concurrent_hash_map.h>
+#include "concurrent_map.h"
 
 using namespace std;
 
@@ -21,8 +21,9 @@ int main(int argc, char *argv[]) {
     const int TOTAL_THREADS = NUM_MAPPERS + NUM_REDUCERS;
     pthread_barrier_t barrier;
     pthread_barrier_init(&barrier, NULL, TOTAL_THREADS);
-    // the conc map shared by all mappers
-    tbb::concurrent_hash_map<string, set<int>> partialResults;
+    
+    // concurrent_map to store the partial results
+    ConcurrentMap partialResults(TOTAL_THREADS * 16);
 
     // map to store the filename and id
     unordered_map<string, int> fileMap;
