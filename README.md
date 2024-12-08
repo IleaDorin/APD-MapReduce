@@ -1,16 +1,14 @@
 # MapReduce Framework in Theory
 
-MapReduce is a programming model designed to process large-scale datasets by distributing 
-computation across multiple parallel workers. It breaks down into two key phases:
+MapReduce is a programming model designed to handle large datasets by splitting tasks across multiple threads. It operates in two main phases:
 
-### Map Phase:
-- Each worker (Mapper) processes a subset of the input data.
-- Transforms the data into intermediate key-value pairs (e.g., `word → file_ids`).
-- The output of the Map phase is partitioned and grouped by keys.
+## Map Phase
+- Mappers process different portions of the input data.
+- They generate intermediate key-value pairs (e.g., `word → file_ids`) from the data.
 
-### Reduce Phase:
-- Reducers aggregate the intermediate key-value pairs from Mappers.
-- Apply operations such as summing, grouping, or sorting to produce final results.
+## Reduce Phase
+- Reducers work on grouped key-value pairs from the Mappers.
+- They aggregate, sort, or process these pairs to produce the final results.
 
 ---
 
@@ -57,7 +55,7 @@ The tasks for both types of threads are distributed using a greedy approach:
 ## Concurrent_map implemetation
   - The concurrent_map structure is just a list of buckets, each consisting in a unordered_map and a mutex
   (similar to a normal map but for each bucket access, it locks and unlocks it)
-  - Each time a maper tries to insert an element into the partialRsult, the word is allocated to a bucket,
+  - Each time a mapper tries to insert an element into the partialRsult, the word is allocated to a bucket,
   then the bucket is locked, the element gets inserted and the bucket reopens. I tried running the code with
   a variety of buckets and for scalability I initialized the concurrent_map with no_of_threads * 16 based on
   a trial and error approach.
