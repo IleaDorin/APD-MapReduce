@@ -42,7 +42,7 @@ void mapperFunction(ThreadArgs* args) {
 string normalizeWord(const string& inputWord) {
     string normalizedWord;
 
-    // copy only alphabetic characters to the normalized word
+    // copy only alphab char
     copy_if(inputWord.begin(), inputWord.end(), back_inserter(normalizedWord),
                  [](char c) { return isalpha(c); });
 

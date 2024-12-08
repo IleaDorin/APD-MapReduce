@@ -51,6 +51,9 @@ The tasks for both types of threads are distributed using a greedy approach:
 
 ---
 
+  -"Can we use the concurrent_hash_map from tbb library?"
+  -"No, we have concurrent_map at home!"
+  -(concurrent map at home:)
 ## Concurrent_map implemetation
   - The concurrent_map structure is just a list of buckets, each consisting in a unordered_map and a mutex
   (similar to a normal map but for each bucket access, it locks and unlocks it)

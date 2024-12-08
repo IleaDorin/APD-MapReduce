@@ -33,9 +33,11 @@ int main(int argc, char *argv[]) {
     
     vector<pair<string, size_t>> fileSizes = getFileSizes(fileNames);
     vector<vector<pair<string, int>>> mapperFiles;
+
+    // distribute words to the mappers
     distributeFilesDynamic(fileSizes, NUM_MAPPERS, mapperFiles, fileMap);
 
-    // distribute the letters to the reducers
+    // distribute letters to the reducers
     map<int, vector<char>> reducerLetters = mapReducerToLetters(TOTAL_THREADS, NUM_MAPPERS);
 
     pthread_t threads[TOTAL_THREADS];

@@ -60,7 +60,6 @@ void* threadFunction(void* arg) {
         cerr << "Unknown thread type for Thread " << args->id << "\n";
     }
 
-    // exit the thread
     pthread_exit(NULL);
 }
 
@@ -102,7 +101,7 @@ vector<string> parseInputFile(const string& filename, unordered_map<string, int>
     ifstream inputFile(filename);
 
     if (!inputFile.is_open()) {
-        throw runtime_error("Failed to open input file: " + filename);
+        cerr << "Failed to open output file: " << filename << "\n";
     }
 
     int numFiles;
